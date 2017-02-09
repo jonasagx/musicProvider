@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"regexp"
 	"os/exec"
+	"net/http"
 	"io/ioutil"
 	"path/filepath"
-	"github.com/jonasagx/csutils"
+	// "github.com/jonasagx/csutils"
 )
 
 func GetFilesList(dir string) []string {
@@ -93,17 +94,34 @@ func Convert2Mp3(filenameInput string){
 	runCommand(command, args)
 }
 
+// type Song struct {
+// 	Title string `json:Title`
+// }
+
+func getHomePage(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Welcome to the HomePage!")
+	fmt.Println("Endpoint Hit: homePage")
+}
+
+func StartHTTPServer() {
+	log.Print("Starting server")
+	http.HandleFunc("/", getHomePage)
+
+	log.Fatal(http.ListenAndServe(":8000", nil))
+}
+
 func main() {
-	url := csutils.ReadText("Youtube url: ")
+	// url := csutils.ReadText("Youtube url: ")
 
-	DownloadVideo(url)
+	// DownloadVideo(url)
 
-	files := GetFilesList(GetCurrentDir())
+	// files := GetFilesList(GetCurrentDir())
 
-	videos := FilterFilenames(files, `\.mkv|mp4|webm`)
-	log.Println(videos)
+	// videos := FilterFilenames(files, `\.mkv|mp4|webm`)
+	// log.Println(videos)
 
-	for _,video := range videos {
-		Convert2Mp3(video)
-	}
+	// for _,video := range videos {
+	// 	Convert2Mp3(video)
+	// }
+	StartHTTPServer()
 }
