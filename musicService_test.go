@@ -34,8 +34,8 @@ func TestRaplceFunc(t *testing.T){
 }
 
 func TestFilterFilenames(t *testing.T) {
-	testableOutput := FilterFilenames(NotFilteredFilenamesInput, `\.txt`)
-	validOutput := []string{"a.txt"}
+	testableOutput := FilterFilenames(NotFilteredFilenamesInput, `\.txt|\.out`)
+	validOutput := []string{"a.txt", "b.out"}
 
 	isValidList(validOutput, testableOutput, t)
 }
