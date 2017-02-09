@@ -8,9 +8,24 @@ import (
 	"os/exec"
 	"net/http"
 	"io/ioutil"
+	"encoding/json"
 	"path/filepath"
-	// "github.com/jonasagx/csutils"
+
+	// "github.com/jonasagx/id3tags"
+	"github.com/julienschmidt/httprouter"
 )
+
+var(
+	supportedVideosFormats = `\.mkv|\.mp4|\.webm`
+	httpPort = ":8000"
+	audioOutputFolder = "musicFiles"
+)
+
+func checkErr(err error){
+	if err != nil {
+		panic(err)
+	}
+}
 
 func GetFilesList(dir string) []string {
 	var filenames []string
@@ -50,10 +65,18 @@ func CheckPath(command string) (bool, string) {
 
 func GetCurrentDir() string {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		log.Fatal(err)
-	}
+	checkErr(err)
 	return dir
+}
+
+func GetAudioOutputDir() string {
+	var currentDir = GetCurrentDir()
+	var path = path.Join(currentDir, audioOutputFolder)
+
+	_, err := os.Stat(path)
+	checkErr(err)
+	err = os.MkdirAll(path, os.ModePerm)
+	checkErr(err)
 }
 
 func runCommand(command string, args []string){
@@ -94,34 +117,61 @@ func Convert2Mp3(filenameInput string){
 	runCommand(command, args)
 }
 
-// type Song struct {
-// 	Title string `json:Title`
+// func SetMp3Tags(song Song) {
+// 	var audioFile id3tags.Mp3
+// 	audioFile.
+
 // }
 
-func getHomePage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Welcome to the HomePage!")
+func ConvertVideoToMp3(song Song){
+	log.Println("Processing", song)
+	DownloadVideo(song.Url)
+
+	files := GetFilesList(GetCurrentDir())
+
+	videos := FilterFilenames(files, supportedVideosFormats)
+	log.Println(videos)
+
+	for _,video := range videos {
+		Convert2Mp3(video)
+	}
+}
+
+// --------------------------------- HTTP Facede ---------------------------------
+
+type Song struct {
+	Title string `json:title`
+	Artist string `json:artist`
+	Album string `json:album`
+	Url string `json:url`
+}
+
+func postVideoToMp3(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	body, err := ioutil.ReadAll(r.Body)
+	checkErr(err)
+
+	var song Song
+	err = json.Unmarshal(body, &song)
+	checkErr(err)
+
+	ConvertVideoToMp3(song)
+}
+
+func getHomePage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	fmt.Fprintf(w, "Welcome to the MusicProvider!")
 	fmt.Println("Endpoint Hit: homePage")
 }
 
 func StartHTTPServer() {
-	log.Print("Starting server")
-	http.HandleFunc("/", getHomePage)
+	log.Println("Starting server at http://localhost" + httpPort)
+	
+	router := httprouter.New()
+	router.GET("/", getHomePage)
+	router.POST("/", postVideoToMp3)
 
-	log.Fatal(http.ListenAndServe(":8000", nil))
+	log.Fatal(http.ListenAndServe(httpPort, router))
 }
 
 func main() {
-	// url := csutils.ReadText("Youtube url: ")
-
-	// DownloadVideo(url)
-
-	// files := GetFilesList(GetCurrentDir())
-
-	// videos := FilterFilenames(files, `\.mkv|mp4|webm`)
-	// log.Println(videos)
-
-	// for _,video := range videos {
-	// 	Convert2Mp3(video)
-	// }
 	StartHTTPServer()
 }
