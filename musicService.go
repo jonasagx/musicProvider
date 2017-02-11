@@ -17,7 +17,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-var(
+const (
 	supportedVideosFormats = `\.mkv|\.mp4|\.webm`
 	httpPort = ":8000"
 	audioOutputFolder = "musicFiles"
