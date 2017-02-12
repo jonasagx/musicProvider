@@ -25,6 +25,24 @@ const (
 	videoFilenameFormat = "%(title)s-%(id)s.%(ext)s"
 )
 
+type Song struct {
+	Title string `json:title`
+	Artist string `json:artist`
+	Album string `json:album`
+	Url string `json:url`
+}
+
+func (s *Song) GetVideoId() string {
+	regex := MustCompile("v=")
+	parts := regex.Split(s.Url, 2)
+
+	if len(parts) == 2 {
+		return parts[1]
+	} else {
+		return ""
+	}
+}
+
 func checkErr(err error){
 	if err != nil {
 		panic(err)
@@ -162,13 +180,6 @@ func ConvertVideoToMp3(song Song) {
 }
 
 // --------------------------------- HTTP Facede ---------------------------------
-
-type Song struct {
-	Title string `json:title`
-	Artist string `json:artist`
-	Album string `json:album`
-	Url string `json:url`
-}
 
 func postVideoToMp3(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	body, err := ioutil.ReadAll(r.Body)
