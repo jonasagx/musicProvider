@@ -33,14 +33,14 @@ type Song struct {
 }
 
 func (s *Song) GetVideoId() string {
-	regex := MustCompile("v=")
-	parts := regex.Split(s.Url, 2)
+	regex := regexp.MustCompile("v=")
 
-	if len(parts) == 2 {
-		return parts[1]
-	} else {
-		return ""
+	if !regex.MatchString(s.Url) {
+		log.Fatal("Invalid Url" + s.Url)
 	}
+
+	parts := regex.Split(s.Url, 2)
+	return parts[1]
 }
 
 func checkErr(err error){
