@@ -13,7 +13,7 @@ import (
 	"encoding/json"
 	"path/filepath"
 
-	// "github.com/jonasagx/id3tags"
+	"github.com/jonasagx/id3tags"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -22,7 +22,7 @@ const (
 	httpPort = ":8000"
 	audioOutputFolder = "musicFiles"
 	videoOutputFolder = "videoFiles"
-	videoFilenameFormat = "%(title)s-%(id)s.%(ext)s"
+	videoFilenameFormat = "%(id)s.%(ext)s"
 )
 
 type Song struct {
@@ -30,6 +30,7 @@ type Song struct {
 	Artist string `json:artist`
 	Album string `json:album`
 	Url string `json:url`
+	Year string `json:year`
 }
 
 func (s *Song) GetVideoId() string {
@@ -47,6 +48,11 @@ func checkErr(err error){
 	if err != nil {
 		panic(err)
 	}
+}
+
+func DeleteFile(filePath string) {
+	var err = os.Remove(filePath)
+	checkErr(err)
 }
 
 func GetFilesList(dir string) []string {
@@ -139,7 +145,7 @@ func StringParserToMp3(videoFilename string) string {
 	return checker.ReplaceAllLiteralString(videoFilename, ".mp3")
 }
 
-func Convert2Mp3(videoFilename string){
+func Convert2Mp3(videoFilename string) {
 	log.Println("Converting", videoFilename)
 
 	command := "ffmpeg"
@@ -154,16 +160,30 @@ func Convert2Mp3(videoFilename string){
 	runCommand(command, args)
 }
 
-// func SetMp3Tags(song Song) {
-// 	var audioFile id3tags.Mp3
-// 	audioFile.
+func SetMp3Tags(song Song) {
+	var audioFile id3tags.Mp3
+	listOfAudioFiles := FilterFilenames(GetFilesList(audioOutputFolder), song.GetVideoId())
+	log.Println(listOfAudioFiles)
 
-// }
+	if listOfAudioFiles != nil && len(listOfAudioFiles) == 1 {
+		filename := listOfAudioFiles[0]
+		filePath := GetAudioOutputDir(filename)
+
+		audioFile.FilePath = filePath 
+		audioFile.GetID3Tags()
+		audioFile.Artist = song.Artist
+		audioFile.Title = song.Title
+		audioFile.Album = song.Album
+		audioFile.Year = song.Year
+		audioFile.SetID3Tags()
+	}
+
+}
 
 func ConvertVideoToMp3(song Song) {
 	t0 := time.Now()
 	log.Println("Converting to mp3")
-	DownloadVideo(song.Url)
+	// DownloadVideo(song.Url)
 
 	files := GetFilesList(GetVideoOutputDir(""))
 
@@ -172,11 +192,13 @@ func ConvertVideoToMp3(song Song) {
 
 	for _,video := range videos {
 		Convert2Mp3(video)
+		// DeleteFile(video)
 	}
 
-	t1 := time.Now()
+	SetMp3Tags(song)
 
-	log.Println("Request took %v", t1.Sub(t0))
+	t1 := time.Now()
+	log.Println("Request took", t1.Sub(t0))
 }
 
 // --------------------------------- HTTP Facede ---------------------------------
