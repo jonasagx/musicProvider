@@ -1,17 +1,17 @@
 package main
 
 import (
-	"testing"
 	"io/ioutil"
+	"testing"
 )
 
 var (
-	NotFilteredFilenamesInput = []string{"Pixies  - Where Is My Mind-5iC0YXspJRM.webm", "a.mkv", "kj3lk2j4.mp4", "a.txt", "b.out"} 
-	
-	validFilenamesInput = []string{"Pixies  - Where Is My Mind-5iC0YXspJRM.webm", "a.mkv", "kj3lk2j4.mp4"}
+	NotFilteredFilenamesInput = []string{"Pixies  - Where Is My Mind-5iC0YXspJRM.webm", "a.mkv", "kj3lk2j4.mp4", "a.txt", "b.out"}
+
+	validFilenamesInput  = []string{"Pixies  - Where Is My Mind-5iC0YXspJRM.webm", "a.mkv", "kj3lk2j4.mp4"}
 	validFilenamesOutput = []string{"Pixies  - Where Is My Mind-5iC0YXspJRM.mp3", "a.mp3", "kj3lk2j4.mp3"}
-	youtubeUrls = []string{"https://www.youtube.com/watch?v=HO2tEv68UcY"}
-	videoIDs = []string{"HO2tEv68UcY"}
+	youtubeUrls          = []string{"https://www.youtube.com/watch?v=HO2tEv68UcY"}
+	videoIDs             = []string{"HO2tEv68UcY"}
 )
 
 func isValidList(validList, testingList []string, t *testing.T) {
@@ -19,8 +19,8 @@ func isValidList(validList, testingList []string, t *testing.T) {
 		t.Error("Expected", len(validList), " elements but got", (testingList), "instead")
 	}
 
-	for index,value := range testingList {
-		if validList[index] != value{
+	for index, value := range testingList {
+		if validList[index] != value {
 			t.Error("Expected", validList[index], "but got", value, "instead")
 		}
 	}
@@ -35,8 +35,8 @@ func TestGetVideoId(t *testing.T) {
 	}
 }
 
-func TestRaplceFunc(t *testing.T){
-	for index,filename := range validFilenamesInput {
+func TestRaplceFunc(t *testing.T) {
+	for index, filename := range validFilenamesInput {
 		testableOutput := StringParserToMp3(filename)
 		if testableOutput != validFilenamesOutput[index] {
 			t.Error("Expected", validFilenamesOutput[index], "but got", testableOutput, "instead")
@@ -57,10 +57,10 @@ func TestGetFilesList(t *testing.T) {
 	var testableOutput = GetFilesList(path)
 
 	infoFiles, _ := ioutil.ReadDir(path)
-    
-    for _,filename := range infoFiles {
-    	validFilenames = append(validFilenames, filename.Name())
-    }
 
-    isValidList(validFilenames, testableOutput, t)
+	for _, filename := range infoFiles {
+		validFilenames = append(validFilenames, filename.Name())
+	}
+
+	isValidList(validFilenames, testableOutput, t)
 }

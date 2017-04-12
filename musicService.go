@@ -1,17 +1,17 @@
 package main
 
 import (
-	"os"
-	"log"
-	"fmt"
-	"path"
-	"time"
-	"regexp"
-	"os/exec"
-	"net/http"
-	"io/ioutil"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
+	"os/exec"
+	"path"
 	"path/filepath"
+	"regexp"
+	"time"
 
 	"github.com/jonasagx/id3tags"
 	"github.com/julienschmidt/httprouter"
@@ -19,18 +19,18 @@ import (
 
 const (
 	supportedVideosFormats = `\.mkv|\.mp4|\.webm`
-	httpPort = ":8000"
-	audioOutputFolder = "musicFiles"
-	videoOutputFolder = "videoFiles"
-	videoFilenameFormat = "%(id)s.%(ext)s"
+	httpPort               = ":8000"
+	audioOutputFolder      = "musicFiles"
+	videoOutputFolder      = "videoFiles"
+	videoFilenameFormat    = "%(id)s.%(ext)s"
 )
 
 type Song struct {
-	Title string `json:title`
+	Title  string `json:title`
 	Artist string `json:artist`
-	Album string `json:album`
-	Url string `json:url`
-	Year string `json:year`
+	Album  string `json:album`
+	Url    string `json:url`
+	Year   string `json:year`
 }
 
 func (s *Song) GetVideoId() string {
@@ -44,7 +44,7 @@ func (s *Song) GetVideoId() string {
 	return parts[1]
 }
 
-func checkErr(err error){
+func checkErr(err error) {
 	if err != nil {
 		panic(err)
 	}
@@ -59,19 +59,19 @@ func GetFilesList(dir string) []string {
 	var filenames []string
 
 	infoFiles, _ := ioutil.ReadDir(dir)
-    
-    for _,filename := range infoFiles {
-    	filenames = append(filenames, filename.Name())
-    }
 
-    return filenames
+	for _, filename := range infoFiles {
+		filenames = append(filenames, filename.Name())
+	}
+
+	return filenames
 }
 
 func FilterFilenames(filenames []string, expr string) []string {
 	var matches []string
 	checker := regexp.MustCompile(expr)
 
-	for _,file := range filenames {
+	for _, file := range filenames {
 		if checker.MatchString(file) {
 			matches = append(matches, file)
 		}
@@ -82,13 +82,13 @@ func FilterFilenames(filenames []string, expr string) []string {
 
 func CheckPath(command string) (bool, string) {
 	envPath, err := exec.LookPath(command)
-    if err != nil {
-    	log.Fatal(command, "not in environment path")
-    	return false, ""
-    }
-    
-    log.Println(command, "is available at ", envPath)
-    return true, envPath
+	if err != nil {
+		log.Fatal(command, "not in environment path")
+		return false, ""
+	}
+
+	log.Println(command, "is available at ", envPath)
+	return true, envPath
 }
 
 func GetCurrentDir() string {
@@ -117,7 +117,7 @@ func GetVideoOutputDir(filename string) string {
 	return makePath(GetCurrentDir(), videoOutputFolder, filename)
 }
 
-func runCommand(command string, args []string){
+func runCommand(command string, args []string) {
 	log.Println("Running", command, args)
 	err := exec.Command(command, args...).Run()
 
@@ -169,7 +169,7 @@ func SetMp3Tags(song Song) {
 		filename := listOfAudioFiles[0]
 		filePath := GetAudioOutputDir(filename)
 
-		audioFile.FilePath = filePath 
+		audioFile.FilePath = filePath
 		audioFile.GetID3Tags()
 		audioFile.Artist = song.Artist
 		audioFile.Title = song.Title
@@ -183,14 +183,14 @@ func SetMp3Tags(song Song) {
 func ConvertVideoToMp3(song Song) {
 	t0 := time.Now()
 	log.Println("Converting to mp3")
-	// DownloadVideo(song.Url)
+	DownloadVideo(song.Url)
 
 	files := GetFilesList(GetVideoOutputDir(""))
 
 	videos := FilterFilenames(files, supportedVideosFormats)
 	log.Println(videos)
 
-	for _,video := range videos {
+	for _, video := range videos {
 		Convert2Mp3(video)
 		// DeleteFile(video)
 	}
@@ -223,7 +223,7 @@ func getHomePage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 func StartHTTPServer() {
 	log.Println("Starting server at http://localhost" + httpPort)
-	
+
 	router := httprouter.New()
 	router.GET("/", getHomePage)
 	router.POST("/", postVideoToMp3)
