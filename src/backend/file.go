@@ -1,13 +1,13 @@
 package backend
 
 import (
-	"os"
-	"log"
-	"path"
-	"regexp"
-	"os/exec"
-	"path/filepath"
 	"io/ioutil"
+	"log"
+	"os"
+	"os/exec"
+	"path"
+	"path/filepath"
+	"regexp"
 )
 
 func checkErr(err error) {

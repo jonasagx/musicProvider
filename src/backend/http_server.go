@@ -1,11 +1,11 @@
 package backend
 
 import (
-	"log"
-	"fmt"
-	"net/http"
-	"io/ioutil"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -36,5 +36,5 @@ func StartHTTPServer() {
 	router.GET("/", getHomePage)
 	router.POST("/download", postVideo)
 
-	log.Fatal(http.ListenAndServe(":" + Conf.HttpPort, router))
+	log.Fatal(http.ListenAndServe(":"+Conf.HttpPort, router))
 }

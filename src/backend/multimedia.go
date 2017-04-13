@@ -1,12 +1,12 @@
 package backend
 
 import (
-	"os"
 	"fmt"
 	"log"
-	"time"
-	"regexp"
+	"os"
 	"os/exec"
+	"regexp"
+	"time"
 
 	"github.com/jonasagx/id3tags"
 )
