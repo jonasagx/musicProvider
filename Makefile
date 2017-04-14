@@ -1,64 +1,49 @@
-.PHONY: build doc fmt lint run test vendor_clean vendor_get vendor_update vet
-
-# Prepend our _vendor directory to the system GOPATH
-# so that import path resolution will prioritize
-# our third party snapshots.
 GOPATH=$(shell pwd)/vendor:$(shell pwd)
 GOBIN=$(shell pwd)/bin
 GOFILES=$(wildcard *.go)
 GONAME=$(shell basename "$(PWD)")
 PID=/tmp/go-$(GONAME).pid
 
-export GOPATH
+# all: watch
 
 default: build
-
-# build: vet
-# 	go build -v -o ./bin/main_app ./src/main_app
 
 build:
 	@echo "Building $(GOFILES) to ./bin"
 	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go build -o bin/$(GONAME) $(GOFILES)
 
-doc:
-	godoc -http=:6060 -index
+get:
+	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go get .
 
-# http://golang.org/cmd/go/#hdr-Run_gofmt_on_package_sources
-fmt:
-	go fmt ./src/...
-
-# https://github.com/golang/lint
-# go get github.com/golang/lint/golint
-lint:
-	golint ./src
-
-run: build
-	./bin/main_app
+install:
+	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go install $(GOFILES)
 
 test:
 	go test ./src/...
 
-vendor_clean:
-	rm -dRf ./_vendor/src
+run: build
+	./bin/$(GONAME)
+	# @GOPATH=$(GOPATH) GOBIN=$(GOBIN) go run $(GOFILES)
 
-# We have to set GOPATH to just the _vendor
-# directory to ensure that `go get` doesn't
-# update packages in our primary GOPATH instead.
-# This will happen if you already have the package
-# installed in GOPATH since `go get` will use
-# that existing location as the destination.
-vendor_get: vendor_clean
-	GOPATH=${PWD}/_vendor go get -d -u -v \
-	github.com/jpoehls/gophermail \
-	github.com/codegangsta/martini
+watch: build stop start
+	@fswatch -o *.go src/**/*.go | xargs -n1 -I{}  make restart || make stop
 
-vendor_update: vendor_get
-	rm -rf `find ./_vendor/src -type d -name .git` \
-	&& rm -rf `find ./_vendor/src -type d -name .hg` \
-	&& rm -rf `find ./_vendor/src -type d -name .bzr` \
-	&& rm -rf `find ./_vendor/src -type d -name .svn`
+restart: stop clean build start
 
-# http://godoc.org/code.google.com/p/go.tools/cmd/vet
-# go get code.google.com/p/go.tools/cmd/vet
-vet:
-	go vet ./src/...
+start:
+	@echo "Starting bin/$(GONAME)"
+	@./bin/$(GONAME) & echo $$! > $(PID)
+
+stop:
+	@echo "Stopping bin/$(GONAME)"
+	@-kill `cat $(PID)` || true
+
+build-ui:
+	@echo "Building UI"
+	@cd ui && npm run build
+
+clean:
+	@echo "Cleaning"
+	@GOPATH=$(GOPATH) GOBIN=$(GOBIN) go clean
+
+.PHONY: build get install test run watch start stop restart clean
